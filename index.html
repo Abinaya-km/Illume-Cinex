@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ILLUME CINEX | Cinematic Video Editor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #090b12;
+    --bg-soft: #111523;
+    --panel: #121a2b;
+    --panel-alt: #151e30;
+    --text: #f4f6ff;
+    --muted: #adb4c8;
+    --gold: #f2c978;
+    --gold-2: #d9a142;
+    --violet: #7a63ff;
+    --cyan: #53b9ff;
+    --line: rgba(255, 255, 255, 0.12);
+    --line-2: rgba(242, 201, 120, 0.3);
+    --radius: 16px;
+    --radius-lg: 24px;
+    --shadow: 0 18px 45px rgba(3, 6, 16, 0.45);
+    --hero-grad: linear-gradient(135deg, rgba(242,201,120,.24), rgba(122,99,255,.22), rgba(83,185,255,.14));
+    --btn-grad: linear-gradient(95deg, #f2c978, #b482e8 52%, #53b9ff);
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: "Inter", sans-serif;
+    background:
+      radial-gradient(circle at 12% 12%, rgba(122,99,255,.2), transparent 35%),
+      radial-gradient(circle at 84% 20%, rgba(83,185,255,.16), transparent 30%),
+      radial-gradient(circle at 50% 100%, rgba(242,201,120,.1), transparent 40%),
+      var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  .loader {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    display: grid;
+    place-items: center;
+    background: #080a10;
+    transition: opacity .55s ease, visibility .55s ease;
+  }
+  .loader.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+  .loader-ring {
+    width: 74px;
+    height: 74px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,.12);
+    border-top-color: var(--gold);
+    animation: spin 1s linear infinite;
+    box-shadow: 0 0 24px rgba(242,201,120,.35);
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .container { width: min(1120px, 92%); margin: 0 auto; }
+  .section { padding: 6.5rem 0; }
+  .section-label {
+    color: var(--gold);
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    font-size: .72rem;
+    margin-bottom: .85rem;
+  }
+  .section-title {
+    font-family: "Cinzel", serif;
+    font-weight: 700;
+    line-height: 1.2;
+    font-size: clamp(1.9rem, 3.6vw, 2.9rem);
+    margin-bottom: 1rem;
+  }
+  .section-title em { font-style: normal; color: var(--gold); }
+  .section-copy { color: var(--muted); max-width: 680px; }
+
+  nav {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 50;
+    backdrop-filter: blur(10px);
+    background: rgba(7, 9, 15, 0.72);
+    border-bottom: 1px solid transparent;
+    transition: border-color .25s ease, box-shadow .25s ease;
+  }
+  nav.scrolled { border-color: var(--line); box-shadow: 0 8px 24px rgba(0,0,0,.35); }
+  .nav-wrap {
+    width: min(1120px, 92%);
+    margin: 0 auto;
+    height: 76px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .brand {
+    font-family: "Cinzel", serif;
+    text-decoration: none;
+    color: var(--text);
+    letter-spacing: .06em;
+    font-size: 1rem;
+  }
+  .brand span { color: var(--gold); }
+  .nav-links { display: flex; list-style: none; gap: 1.5rem; }
+  .nav-links a { color: var(--muted); text-decoration: none; font-size: .9rem; transition: color .2s ease; }
+  .nav-links a:hover { color: var(--text); }
+  .menu-btn { display: none; background: none; border: none; color: var(--text); font-size: 1.35rem; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    border-radius: 999px;
+    text-decoration: none;
+    font-weight: 600;
+    border: 1px solid transparent;
+    transition: transform .22s ease, box-shadow .22s ease, filter .22s ease, border-color .22s ease;
+    cursor: pointer;
+  }
+  .btn-primary {
+    background: var(--btn-grad);
+    color: #0a0a10;
+    padding: .85rem 1.6rem;
+    box-shadow: 0 8px 28px rgba(122,99,255,.4), 0 0 0 1px rgba(255,255,255,.2) inset;
+  }
+  .btn-primary:hover { transform: translateY(-2px); filter: brightness(1.07); }
+  .btn-ghost {
+    color: var(--text);
+    border-color: var(--line);
+    padding: .84rem 1.5rem;
+    background: rgba(255,255,255,.03);
+  }
+  .btn-ghost:hover { transform: translateY(-2px); border-color: var(--line-2); box-shadow: 0 0 22px rgba(242,201,120,.2); }
+
+  #hero {
+    min-height: 100vh;
+    padding-top: 9.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.2fr .9fr;
+    gap: 2rem;
+    align-items: center;
+  }
+  .hero-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    font-size: .75rem;
+    color: var(--gold);
+    border: 1px solid var(--line-2);
+    background: rgba(242,201,120,.07);
+    padding: .36rem .9rem;
+    border-radius: 999px;
+    margin-bottom: 1.2rem;
+  }
+  .pulse-dot { width: 7px; height: 7px; border-radius: 50%; background: #6dffa8; animation: pulse 2.2s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .28; } }
+
+  .hero-title {
+    font-family: "Cinzel", serif;
+    font-size: clamp(2.5rem, 8vw, 5.6rem);
+    line-height: 1.02;
+    margin-bottom: 1rem;
+    letter-spacing: .04em;
+  }
+  .hero-title em { font-style: normal; color: var(--gold); display: block; }
+  .hero-copy { color: #ced4e6; max-width: 650px; margin-bottom: 1.8rem; font-size: 1.05rem; }
+  .hero-actions { display: flex; flex-wrap: wrap; gap: .8rem; }
+
+  .hero-card {
+    padding: 1.3rem;
+    border: 1px solid var(--line);
+    background: linear-gradient(180deg, rgba(18,26,43,.95), rgba(18,26,43,.7));
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+    transform-style: preserve-3d;
+  }
+  .hero-card, .service-card, .portfolio-card, .testimonial-card, .glass {
+    animation: floatDrift 7s ease-in-out infinite;
+    animation-delay: var(--delay, 0s);
+  }
+  @keyframes floatDrift {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-7px); }
+  }
+  .hero-card::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    background: var(--hero-grad);
+    opacity: .4;
+    filter: blur(20px);
+    z-index: 0;
+  }
+  .hero-card-inner { position: relative; z-index: 1; border: 1px solid rgba(255,255,255,.14); border-radius: 18px; padding: 1.2rem; }
+  .hero-mini { color: var(--muted); font-size: .8rem; margin-bottom: .4rem; text-transform: uppercase; letter-spacing: .14em; }
+  .hero-brand { font-family: "Cinzel", serif; color: var(--gold); font-size: 1.5rem; margin-bottom: .45rem; }
+  .hero-parallax { transition: transform .16s linear; }
+
+  .about-grid, .contact-grid { display: grid; grid-template-columns: 1fr 1.15fr; gap: 2rem; align-items: start; }
+  .glass {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: linear-gradient(180deg, rgba(18,26,43,.88), rgba(18,26,43,.68));
+    box-shadow: var(--shadow);
+  }
+  .about-visual {
+    min-height: 390px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    background:
+      radial-gradient(circle at 25% 15%, rgba(83,185,255,.22), transparent 35%),
+      radial-gradient(circle at 80% 80%, rgba(242,201,120,.22), transparent 45%),
+      var(--panel);
+  }
+  .about-badge {
+    width: fit-content;
+    border: 1px solid var(--line-2);
+    border-radius: 12px;
+    padding: .55rem .9rem;
+    color: var(--gold);
+    background: rgba(242,201,120,.08);
+    margin-top: 1rem;
+  }
+  .about-copy { color: var(--muted); margin-top: 1rem; }
+  .stats {
+    margin-top: 1.4rem;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: .7rem;
+  }
+  .stat {
+    background: rgba(255,255,255,.02);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: .9rem;
+  }
+  .stat strong { display: block; font-size: 1.4rem; color: var(--gold); }
+  .stat span { color: var(--muted); font-size: .78rem; }
+
+  #services .services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+  .service-card {
+    padding: 1.2rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: linear-gradient(180deg, rgba(18,26,43,.85), rgba(18,26,43,.65));
+    transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease;
+    will-change: transform;
+  }
+  .service-card:hover { transform: translateY(-5px); border-color: var(--line-2); box-shadow: 0 14px 30px rgba(5,6,14,.44); }
+  .service-card h3 { margin: .7rem 0 .45rem; font-size: .98rem; }
+  .service-card p { color: var(--muted); font-size: .88rem; }
+
+  #portfolio .portfolio-grid {
+    margin-top: 2rem;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+  .portfolio-card {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: rgba(19, 25, 39, .85);
+    text-decoration: none;
+    color: var(--text);
+    transform: translateY(0);
+    transition: transform .24s ease, border-color .24s ease, box-shadow .24s ease;
+    position: relative;
+    will-change: transform;
+  }
+  .portfolio-card:hover {
+    transform: translateY(-7px) scale(1.01);
+    border-color: var(--line-2);
+    box-shadow: 0 20px 38px rgba(6, 8, 16, .6), 0 0 0 1px rgba(242,201,120,.28) inset;
+  }
+  .portfolio-thumb {
+    height: 185px;
+    position: relative;
+    background: linear-gradient(130deg, rgba(122,99,255,.24), rgba(83,185,255,.2), rgba(242,201,120,.18));
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+  }
+  .portfolio-thumb::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(0deg, rgba(9,11,18,.72), transparent 55%);
+    opacity: .95;
+  }
+  .watch-overlay {
+    position: absolute;
+    right: .8rem;
+    bottom: .8rem;
+    z-index: 1;
+    font-size: .75rem;
+    color: #fff;
+    border: 1px solid rgba(255,255,255,.38);
+    border-radius: 999px;
+    padding: .28rem .6rem;
+    background: rgba(5, 8, 15, .55);
+    transform: translateY(8px);
+    opacity: 0;
+    transition: .22s ease;
+  }
+  .portfolio-card:hover .watch-overlay { opacity: 1; transform: translateY(0); }
+  .portfolio-body { padding: 1rem; }
+  .portfolio-tag {
+    display: inline-block;
+    color: var(--gold);
+    border: 1px solid var(--line-2);
+    background: rgba(242,201,120,.09);
+    border-radius: 999px;
+    font-size: .7rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: .22rem .62rem;
+    margin-bottom: .45rem;
+  }
+  .portfolio-title { font-size: .96rem; margin-bottom: .35rem; }
+  .portfolio-desc { color: var(--muted); font-size: .84rem; }
+
+  #testimonials { background: linear-gradient(180deg, rgba(10,12,20,.85), rgba(12,16,27,.95)); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  #testimonials .testimonials-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+  .testimonial-card {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.1rem;
+    background: rgba(255,255,255,.02);
+    transition: border-color .22s ease, transform .22s ease;
+    will-change: transform;
+  }
+  .testimonial-card:hover { border-color: var(--line-2); transform: translateY(-4px); }
+  .stars { color: var(--gold); letter-spacing: .13em; font-size: .8rem; }
+  .testimonial-text { color: #d7ddf0; margin: .7rem 0 .95rem; font-style: italic; }
+  .author { color: var(--text); font-weight: 600; font-size: .92rem; }
+  .role { color: var(--muted); font-size: .78rem; }
+
+  .contact-links { display: grid; gap: .7rem; margin-top: 1rem; }
+  .contact-link {
+    display: flex;
+    align-items: center;
+    gap: .8rem;
+    text-decoration: none;
+    color: var(--text);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: .86rem;
+    background: rgba(255,255,255,.02);
+    transition: transform .22s ease, border-color .22s ease;
+  }
+  .contact-link:hover { transform: translateX(4px); border-color: var(--line-2); }
+  .contact-link small { display: block; color: var(--muted); font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; }
+  .contact-link span { font-size: .89rem; }
+
+  form { display: grid; gap: .9rem; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
+  input, textarea, select {
+    width: 100%;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,.03);
+    color: var(--text);
+    padding: .8rem .85rem;
+    font-family: inherit;
+    font-size: .9rem;
+    outline: none;
+    transition: border-color .2s ease, box-shadow .2s ease;
+  }
+  input:focus, textarea:focus, select:focus { border-color: var(--line-2); box-shadow: 0 0 0 3px rgba(242,201,120,.14); }
+  textarea { min-height: 128px; resize: vertical; }
+  .form-ok { display: none; color: #6dffa8; font-size: .84rem; }
+  .form-actions { display: flex; gap: .7rem; flex-wrap: wrap; }
+
+  footer {
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    text-align: center;
+    font-size: .84rem;
+    padding: 2rem 1rem;
+  }
+
+  .fade { opacity: 0; transform: translateY(24px); transition: opacity .7s ease, transform .7s ease; }
+  .fade.show { opacity: 1; transform: none; }
+
+  @media (max-width: 930px) {
+    .hero-grid, .about-grid, .contact-grid { grid-template-columns: 1fr; }
+    #portfolio .portfolio-grid { grid-template-columns: repeat(2, 1fr); }
+    .menu-btn { display: block; }
+    .nav-links {
+      display: none;
+      position: absolute;
+      left: 4%;
+      top: 82px;
+      width: 92%;
+      flex-direction: column;
+      gap: .5rem;
+      padding: 1rem;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(8, 10, 16, .95);
+    }
+    .nav-links.open { display: flex; }
+  }
+  @media (max-width: 640px) {
+    .section { padding: 5rem 0; }
+    #portfolio .portfolio-grid { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="loader" id="loader"><div class="loader-ring"></div></div>
+
+<nav id="nav">
+  <div class="nav-wrap">
+    <a class="brand" href="#hero"><span>ILLUME</span> CINEX</a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#about">About</a></li>
+      <li><a href="#services">Services</a></li>
+      <li><a href="#portfolio">Work</a></li>
+      <li><a href="#testimonials">Testimonials</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <a href="#contact" class="btn btn-primary">Hire Now</a>
+    <button class="menu-btn" id="menuBtn" aria-label="Toggle menu">☰</button>
+  </div>
+</nav>
+
+<section id="hero">
+  <div class="container hero-grid">
+    <div>
+      <div class="hero-kicker fade"><span class="pulse-dot"></span>Available for new projects</div>
+      <h1 class="hero-title fade">ILLUME <em>CINEX</em></h1>
+      <p class="hero-copy fade" id="heroTagline">Cinematic editing for creators, brands, and stories that deserve unforgettable visuals.</p>
+      <div class="hero-actions fade">
+        <a href="#contact" class="btn btn-primary">Start Project</a>
+        <a href="#portfolio" class="btn btn-ghost">View Work</a>
+      </div>
+    </div>
+    <div class="hero-card hero-parallax" style="--delay:.3s;">
+      <div class="hero-card-inner">
+        <div class="hero-mini">Premium edit suite</div>
+        <div class="hero-brand">ILLUME CINEX</div>
+        <p style="color:var(--muted);">From rough cuts to color finesse, every frame is crafted for impact, rhythm, and emotion.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="about" class="section">
+  <div class="container about-grid">
+    <div class="about-visual glass fade">
+      <div class="section-label">Cinematic identity</div>
+      <h2 class="section-title">Visual stories with <em>precision</em></h2>
+      <div class="about-badge">100% detail-focused post production</div>
+    </div>
+    <div class="fade">
+      <p class="section-label">About</p>
+      <h2 class="section-title">Editing with emotion and <em>clarity</em></h2>
+      <p class="about-copy" id="aboutOne"></p>
+      <p class="about-copy" id="aboutTwo"></p>
+      <div class="stats">
+        <div class="stat"><strong id="stat1"></strong><span>Projects Done</span></div>
+        <div class="stat"><strong id="stat2"></strong><span>Happy Clients</span></div>
+        <div class="stat"><strong id="stat3"></strong><span>Avg. Turnaround</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="services" class="section">
+  <div class="container">
+    <p class="section-label fade">Services</p>
+    <h2 class="section-title fade">Post-production built for <em>modern creators</em></h2>
+    <p class="section-copy fade">Each service is tuned for performance, storytelling, and brand consistency across digital platforms.</p>
+    <div class="services-grid">
+      <article class="service-card fade" style="--delay:.1s;"><h3>YouTube Editing</h3><p>Long-form edits with pacing, story arcs, retention-driven flow, and polished finishing.</p></article>
+      <article class="service-card fade" style="--delay:.3s;"><h3>Reels & Shorts</h3><p>High-energy vertical cuts engineered to hook in seconds and maximize completion rates.</p></article>
+      <article class="service-card fade" style="--delay:.5s;"><h3>Cinematic Films</h3><p>Narrative-driven edits with dramatic rhythm, mood crafting, and cinematic polish.</p></article>
+      <article class="service-card fade" style="--delay:.7s;"><h3>Color Grading</h3><p>Premium color treatment with controlled contrast, skin tones, and signature visual style.</p></article>
+    </div>
+  </div>
+</section>
+
+<section id="portfolio" class="section">
+  <div class="container">
+    <p class="section-label fade">Portfolio</p>
+    <h2 class="section-title fade">Recent projects from <em>ILLUME CINEX</em></h2>
+    <div class="portfolio-grid" id="portfolioGrid"></div>
+  </div>
+</section>
+
+<section id="testimonials" class="section">
+  <div class="container">
+    <p class="section-label fade">Testimonials</p>
+    <h2 class="section-title fade">Client voices, real <em>results</em></h2>
+    <div class="testimonials-grid" id="testimonialsGrid"></div>
+  </div>
+</section>
+
+<section id="contact" class="section">
+  <div class="container contact-grid">
+    <div class="fade">
+      <p class="section-label">Contact</p>
+      <h2 class="section-title">Let’s craft your next <em>visual statement</em></h2>
+      <p class="section-copy">Share your project scope, timeline, and creative direction. You will get a clear editing plan with premium execution.</p>
+      <div class="contact-links">
+        <a id="mailLink" class="contact-link" href="#"><div>✉️</div><div><small>Email</small><span id="contactEmail"></span></div></a>
+        <a id="phoneLink" class="contact-link" href="#"><div>📞</div><div><small>Phone</small><span id="contactPhone"></span></div></a>
+        <a id="instagramLink" class="contact-link" href="#" target="_blank" rel="noopener"><div>📸</div><div><small>Instagram</small><span id="contactInstagram">@illume._cinex</span></div></a>
+        <a id="nameTag" class="contact-link" href="#"><div>👤</div><div><small>Editor</small><span id="contactName"></span></div></a>
+      </div>
+    </div>
+    <div class="glass fade" style="padding:1.2rem;">
+      <form id="contactForm">
+        <div class="form-row">
+          <input id="firstName" type="text" placeholder="First name" required />
+          <input id="lastName" type="text" placeholder="Last name" required />
+        </div>
+        <input id="senderEmail" type="email" placeholder="Email address" required />
+        <input id="senderPhone" type="text" placeholder="Your phone / WhatsApp number" />
+        <select id="serviceType">
+          <option value="">Select service</option>
+          <option>YouTube Editing</option>
+          <option>Reels / Shorts</option>
+          <option>Cinematic Edit</option>
+          <option>Color Grading</option>
+        </select>
+        <textarea id="senderMessage" placeholder="Tell us about your project..." required></textarea>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" style="width:fit-content;">Send Message</button>
+          <button type="button" class="btn btn-ghost" id="sendWhatsappBtn">Send to WhatsApp</button>
+        </div>
+        <p class="form-ok" id="formOk">Message sent successfully to admin inbox.</p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<footer>© <span id="yearNow"></span> ILLUME CINEX · Crafted with cinematic precision.</footer>
+
+<script>
+  const SITE_KEY = "illume_cinex_site_data_v1";
+  const INBOX_KEY = "illume_cinex_inbox_v1";
+
+  function defaultSiteData() {
+    return {
+      brand: "ILLUME CINEX",
+      profile: {
+        name: "Esakkimuthu G",
+        title: "Cinematic Video Editor",
+        hero: "I turn raw footage into stories that move people.",
+        about1: "I am Esakkimuthu G, a video editor focused on narrative rhythm, cinematic contrast, and emotionally grounded storytelling.",
+        about2: "From social reels to polished brand films, I craft edits that retain attention and elevate your visual identity.",
+        email: "esakkimuthugudi@gmail.com",
+        phone: "9497116743",
+        instagram: "https://www.instagram.com/illume._cinex?igsh=MWJ4bHJvdjM4Y2VrcQ==",
+        stat1: "42+",
+        stat2: "28+",
+        stat3: "48h"
+      },
+      portfolio: [
+        { id: 1, title: "Travel Documentary Cut", tag: "YouTube", desc: "Story-led pacing with rich color and ambient sound design.", url: "https://youtube.com", icon: "🎬" },
+        { id: 2, title: "Restaurant Launch Reel", tag: "Reels", desc: "High-retention vertical edit with dynamic transitions.", url: "https://youtube.com", icon: "🍽️" },
+        { id: 3, title: "Brand Showcase Film", tag: "Cinematic", desc: "Premium grade and narrative arc for campaign storytelling.", url: "https://youtube.com", icon: "✨" }
+      ],
+      testimonials: [
+        { id: 1, name: "Harish R", role: "Travel Creator", stars: 5, text: "The final cut looked like a mini-film. Strong pacing and world-class finish." },
+        { id: 2, name: "Divya S", role: "Brand Manager", stars: 5, text: "Quick turnaround, clean communication, and visuals that felt premium." },
+        { id: 3, name: "Naveen K", role: "YouTube Host", stars: 5, text: "Retention improved and comments praised the cinematic look immediately." }
+      ],
+      integrations: {
+        emailEndpoint: "",
+        smsEndpoint: "",
+        whatsappEndpoint: ""
+      }
+    };
+  }
+
+  function getSiteData() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(SITE_KEY));
+      if (!parsed || typeof parsed !== "object") return defaultSiteData();
+      return {
+        ...defaultSiteData(),
+        ...parsed,
+        profile: { ...defaultSiteData().profile, ...(parsed.profile || {}) },
+        portfolio: Array.isArray(parsed.portfolio) ? parsed.portfolio : defaultSiteData().portfolio,
+        testimonials: Array.isArray(parsed.testimonials) ? parsed.testimonials : defaultSiteData().testimonials
+      };
+    } catch (error) {
+      return defaultSiteData();
+    }
+  }
+
+  function saveDefaultsIfMissing() {
+    if (!localStorage.getItem(SITE_KEY)) {
+      localStorage.setItem(SITE_KEY, JSON.stringify(defaultSiteData()));
+    }
+  }
+
+  function renderProfile(data) {
+    const p = data.profile;
+    document.title = data.brand + " | Cinematic Video Editor";
+    document.querySelector(".brand").innerHTML = "<span>ILLUME</span> CINEX";
+    document.getElementById("heroTagline").textContent = p.hero;
+    document.getElementById("aboutOne").textContent = p.about1;
+    document.getElementById("aboutTwo").textContent = p.about2;
+    document.getElementById("stat1").textContent = p.stat1;
+    document.getElementById("stat2").textContent = p.stat2;
+    document.getElementById("stat3").textContent = p.stat3;
+    document.getElementById("contactEmail").textContent = p.email;
+    document.getElementById("contactPhone").textContent = p.phone;
+    document.getElementById("contactInstagram").textContent = "@illume._cinex";
+    document.getElementById("contactName").textContent = p.name;
+    document.getElementById("mailLink").href = "mailto:" + p.email;
+    document.getElementById("phoneLink").href = "tel:" + p.phone.replace(/[^0-9+]/g, "");
+    document.getElementById("instagramLink").href = p.instagram || "https://www.instagram.com/illume._cinex?igsh=MWJ4bHJvdjM4Y2VrcQ==";
+  }
+
+  function renderPortfolio(data) {
+    const grid = document.getElementById("portfolioGrid");
+    if (!data.portfolio.length) {
+      grid.innerHTML = "<p class='section-copy'>No portfolio items yet.</p>";
+      return;
+    }
+    grid.innerHTML = data.portfolio.map(function (item, index) {
+      return "<a class='portfolio-card fade' style='--delay:" + ((index % 4) * 0.2) + "s' href='" + (item.url || "#") + "' target='_blank' rel='noopener'>" +
+        "<div class='portfolio-thumb'>" + (item.icon || "🎬") + "<span class='watch-overlay'>Watch</span></div>" +
+        "<div class='portfolio-body'><span class='portfolio-tag'>" + escapeHtml(item.tag || "Work") + "</span>" +
+        "<h3 class='portfolio-title'>" + escapeHtml(item.title || "Untitled") + "</h3>" +
+        "<p class='portfolio-desc'>" + escapeHtml(item.desc || "") + "</p></div></a>";
+    }).join("");
+    observeFades();
+    attachTiltMotion();
+  }
+
+  function renderTestimonials(data) {
+    const grid = document.getElementById("testimonialsGrid");
+    if (!data.testimonials.length) {
+      grid.innerHTML = "<p class='section-copy'>No testimonials yet.</p>";
+      return;
+    }
+    grid.innerHTML = data.testimonials.map(function (item, index) {
+      const stars = "★".repeat(Math.max(1, Math.min(5, Number(item.stars) || 5)));
+      return "<article class='testimonial-card fade' style='--delay:" + ((index % 4) * 0.25) + "s'>" +
+        "<div class='stars'>" + stars + "</div>" +
+        "<p class='testimonial-text'>\"" + escapeHtml(item.text || "") + "\"</p>" +
+        "<p class='author'>" + escapeHtml(item.name || "Client") + "</p>" +
+        "<p class='role'>" + escapeHtml(item.role || "") + "</p></article>";
+    }).join("");
+    observeFades();
+    attachTiltMotion();
+  }
+
+  function escapeHtml(value) {
+    return String(value || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function initFrontend() {
+    saveDefaultsIfMissing();
+    const data = getSiteData();
+    renderProfile(data);
+    renderPortfolio(data);
+    renderTestimonials(data);
+  }
+
+  function getInboxMessages() {
+    try {
+      const value = JSON.parse(localStorage.getItem(INBOX_KEY));
+      return Array.isArray(value) ? value : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  function saveInboxMessages(messages) {
+    localStorage.setItem(INBOX_KEY, JSON.stringify(messages));
+  }
+
+  function getIntegrationsConfig() {
+    const data = getSiteData();
+    const i = data.integrations || {};
+    return {
+      email: i.emailEndpoint || "",
+      sms: i.smsEndpoint || "",
+      whatsapp: i.whatsappEndpoint || ""
+    };
+  }
+
+  async function fetchWithTimeout(url, options, timeoutMs) {
+    const controller = new AbortController();
+    const timer = setTimeout(function () { controller.abort(); }, timeoutMs);
+    try {
+      return await fetch(url, { ...options, signal: controller.signal });
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  async function sendViaBackend(channel, payload) {
+    const endpoint = getIntegrationsConfig()[channel];
+    if (!endpoint) return { skipped: true };
+    try {
+      const res = await fetchWithTimeout(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      }, 7000);
+      return { ok: res.ok };
+    } catch (error) {
+      return { ok: false };
+    }
+  }
+
+  function buildLeadPayload() {
+    const firstName = document.getElementById("firstName").value.trim();
+    const lastName = document.getElementById("lastName").value.trim();
+    const senderEmail = document.getElementById("senderEmail").value.trim();
+    const senderPhone = document.getElementById("senderPhone").value.trim();
+    const serviceType = document.getElementById("serviceType").value.trim();
+    const senderMessage = document.getElementById("senderMessage").value.trim();
+    return {
+      id: Date.now(),
+      name: (firstName + " " + lastName).trim(),
+      email: senderEmail,
+      phone: senderPhone,
+      service: serviceType || "General Inquiry",
+      message: senderMessage,
+      createdAt: new Date().toISOString()
+    };
+  }
+
+  function openWhatsappForLead(payload) {
+    const adminPhone = (getSiteData().profile.phone || "").replace(/[^\d]/g, "");
+    if (!adminPhone) return;
+    const lines = [
+      "New Inquiry",
+      "Name: " + (payload.name || ""),
+      "Email: " + (payload.email || ""),
+      "Phone: " + (payload.phone || ""),
+      "Service: " + (payload.service || ""),
+      "Message: " + (payload.message || "")
+    ];
+    const text = encodeURIComponent(lines.join("\n"));
+    window.open("https://wa.me/" + adminPhone + "?text=" + text, "_blank");
+  }
+
+  function attachTiltMotion() {
+    document.querySelectorAll(".portfolio-card, .service-card, .testimonial-card, .hero-card").forEach(function (card) {
+      if (card.dataset.motionBound === "1") return;
+      card.dataset.motionBound = "1";
+      card.addEventListener("mousemove", function (event) {
+        const rect = card.getBoundingClientRect();
+        const px = (event.clientX - rect.left) / rect.width;
+        const py = (event.clientY - rect.top) / rect.height;
+        const rotateY = (px - 0.5) * 7;
+        const rotateX = (0.5 - py) * 7;
+        card.style.transform = "perspective(700px) rotateX(" + rotateX.toFixed(2) + "deg) rotateY(" + rotateY.toFixed(2) + "deg)";
+      });
+      card.addEventListener("mouseleave", function () {
+        card.style.transform = "";
+      });
+    });
+  }
+
+  const menuBtn = document.getElementById("menuBtn");
+  const navLinks = document.getElementById("navLinks");
+  menuBtn.addEventListener("click", function () { navLinks.classList.toggle("open"); });
+  navLinks.querySelectorAll("a").forEach(function (link) {
+    link.addEventListener("click", function () { navLinks.classList.remove("open"); });
+  });
+
+  window.addEventListener("scroll", function () {
+    document.getElementById("nav").classList.toggle("scrolled", window.scrollY > 20);
+    const y = window.scrollY * 0.03;
+    const heroCard = document.querySelector(".hero-parallax");
+    if (heroCard) heroCard.style.transform = "translateY(" + Math.min(20, y) + "px)";
+  });
+
+  function observeFades() {
+    if (!window._fadeObserver) {
+      window._fadeObserver = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) entry.target.classList.add("show");
+        });
+      }, { threshold: 0.15 });
+    }
+    document.querySelectorAll(".fade").forEach(function (el) { window._fadeObserver.observe(el); });
+  }
+
+  document.getElementById("contactForm").addEventListener("submit", async function (event) {
+    event.preventDefault();
+    const payload = buildLeadPayload();
+    const inbox = getInboxMessages();
+    inbox.unshift(payload);
+    saveInboxMessages(inbox);
+    const [emailRes, smsRes, waRes] = await Promise.all([
+      sendViaBackend("email", payload),
+      sendViaBackend("sms", payload),
+      sendViaBackend("whatsapp", payload)
+    ]);
+    const ok = document.getElementById("formOk");
+    const anyDelivered = [emailRes, smsRes, waRes].some(function (x) { return x && x.ok; });
+    ok.textContent = anyDelivered
+      ? "Message submitted and sent to configured channels."
+      : "Message saved to admin inbox. Configure delivery endpoints in admin for SMS/WhatsApp/Email dispatch.";
+    ok.style.display = "block";
+    this.reset();
+    setTimeout(function () { ok.style.display = "none"; }, 2600);
+  });
+
+  document.getElementById("sendWhatsappBtn").addEventListener("click", function () {
+    openWhatsappForLead(buildLeadPayload());
+  });
+
+  window.addEventListener("storage", function (event) {
+    if (event.key === SITE_KEY) initFrontend();
+  });
+
+  window.addEventListener("load", function () {
+    initFrontend();
+    observeFades();
+    attachTiltMotion();
+    document.getElementById("loader").classList.add("hide");
+    document.getElementById("yearNow").textContent = new Date().getFullYear();
+  });
+</script>
+</body>
+</html>
