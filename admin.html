@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ILLUME CINEX | Admin Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0b101a;
+    --panel: #111a2a;
+    --panel-2: #141f33;
+    --line: rgba(255, 255, 255, 0.13);
+    --text: #ecf0fb;
+    --muted: #b6bfd4;
+    --gold: #f1ca7e;
+    --violet: #8f7dff;
+    --danger: #ff6f7f;
+    --ok: #74f3a7;
+    --radius: 14px;
+  }
+  body {
+    font-family: "Inter", sans-serif;
+    color: var(--text);
+    background:
+      radial-gradient(circle at 10% 10%, rgba(143,125,255,.2), transparent 32%),
+      radial-gradient(circle at 80% 20%, rgba(84,178,255,.16), transparent 35%),
+      #080d16;
+    min-height: 100vh;
+  }
+  .auth-wrap {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+  }
+  .auth-card {
+    width: min(430px, 100%);
+    background: linear-gradient(180deg, rgba(17,26,42,.95), rgba(17,26,42,.78));
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 1.5rem;
+    box-shadow: 0 24px 40px rgba(0,0,0,.4);
+  }
+  .brand { font-family: "Cinzel", serif; color: var(--gold); letter-spacing: .05em; font-size: 1.2rem; text-align: center; margin-bottom: .35rem; }
+  .auth-title { text-align: center; margin-bottom: 1.1rem; color: var(--muted); font-size: .9rem; }
+  .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin-bottom: .9rem; }
+  .tab-btn {
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,.03);
+    color: var(--muted);
+    border-radius: 999px;
+    padding: .5rem;
+    cursor: pointer;
+  }
+  .tab-btn.active { background: linear-gradient(95deg, #f1ca7e, #8f7dff); color: #090c14; border-color: transparent; font-weight: 600; }
+  .auth-form { display: none; gap: .7rem; }
+  .auth-form.active { display: grid; }
+  input, textarea, select {
+    width: 100%;
+    padding: .72rem .8rem;
+    border-radius: 11px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,.03);
+    color: var(--text);
+    font-family: inherit;
+    outline: none;
+    font-size: .9rem;
+  }
+  input:focus, textarea:focus, select:focus { border-color: rgba(241,202,126,.45); box-shadow: 0 0 0 3px rgba(241,202,126,.18); }
+  button {
+    border: none;
+    border-radius: 999px;
+    padding: .72rem 1.1rem;
+    cursor: pointer;
+    font-weight: 600;
+    font-family: inherit;
+    transition: transform .2s ease, filter .2s ease;
+  }
+  button:hover { transform: translateY(-1px); filter: brightness(1.04); }
+  .btn-primary { background: linear-gradient(95deg, #f1ca7e, #8f7dff); color: #070a12; }
+  .btn-soft { background: rgba(255,255,255,.06); color: var(--text); border: 1px solid var(--line); }
+  .auth-msg { display: none; font-size: .82rem; }
+  .auth-msg.error { color: var(--danger); }
+  .auth-msg.ok { color: var(--ok); }
+  .auth-help {
+    text-align: right;
+    margin-top: -.2rem;
+  }
+  .link-btn {
+    border: none;
+    background: transparent;
+    color: var(--gold);
+    font-size: .82rem;
+    padding: 0;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+  .link-btn:hover { filter: brightness(1.1); transform: none; }
+
+  #app { display: none; }
+  .layout { display: grid; grid-template-columns: 230px 1fr; min-height: 100vh; }
+  .side {
+    background: rgba(9, 14, 23, .9);
+    border-right: 1px solid var(--line);
+    padding: 1rem;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+  }
+  .side h1 { font-family: "Cinzel", serif; color: var(--gold); font-size: 1rem; margin-bottom: 1rem; }
+  .nav-btn {
+    width: 100%;
+    text-align: left;
+    border-radius: 10px;
+    padding: .62rem .7rem;
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid transparent;
+    margin-bottom: .4rem;
+  }
+  .nav-btn.active, .nav-btn:hover { color: var(--text); border-color: var(--line); background: rgba(255,255,255,.04); }
+  .main { padding: 1.3rem; }
+  .topbar {
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: rgba(17,26,42,.7);
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+  .topbar h2 { font-size: 1.05rem; }
+  .topbar p { font-size: .82rem; color: var(--muted); }
+  .grid { display: grid; gap: 1rem; }
+  .cards { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+  .card {
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: .95rem;
+    background: rgba(17,26,42,.68);
+  }
+  .card strong { color: var(--gold); font-size: 1.4rem; display: block; }
+  .card span { font-size: .8rem; color: var(--muted); }
+
+  .panel {
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: rgba(17,26,42,.68);
+    padding: 1rem;
+  }
+  .panel-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: .9rem; }
+  .panel-head h3 { font-size: .96rem; }
+  .list { display: grid; gap: .7rem; }
+  .row {
+    display: grid;
+    grid-template-columns: 42px 1fr auto auto;
+    gap: .8rem;
+    align-items: center;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: .65rem;
+    background: rgba(255,255,255,.02);
+  }
+  .thumb { width: 42px; height: 42px; border-radius: 10px; border: 1px solid var(--line); display: grid; place-items: center; }
+  .sub { color: var(--muted); font-size: .8rem; }
+  .tag { border: 1px solid rgba(241,202,126,.4); color: var(--gold); border-radius: 999px; padding: .22rem .56rem; font-size: .7rem; }
+  .actions { display: flex; gap: .4rem; }
+  .actions button { padding: .42rem .58rem; border-radius: 9px; font-size: .75rem; }
+  .danger { background: rgba(255,111,127,.18); color: #ffdbe0; }
+  .page { display: none; }
+  .page.active { display: block; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .field { margin-bottom: .72rem; }
+  .field label { display: block; color: var(--muted); margin-bottom: .3rem; font-size: .76rem; letter-spacing: .08em; text-transform: uppercase; }
+  textarea { min-height: 90px; resize: vertical; }
+
+  .modal-bg {
+    position: fixed;
+    inset: 0;
+    display: none;
+    place-items: center;
+    background: rgba(5,8,14,.74);
+    padding: 1rem;
+    z-index: 40;
+  }
+  .modal-bg.open { display: grid; }
+  .modal {
+    width: min(520px, 100%);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: #121b2d;
+    padding: 1rem;
+  }
+  .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: .8rem; }
+  .toast {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    border-radius: 10px;
+    padding: .7rem .95rem;
+    background: #182439;
+    border: 1px solid var(--line);
+    opacity: 0;
+    transform: translateY(8px);
+    transition: .25s ease;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  @media (max-width: 980px) {
+    .layout { grid-template-columns: 70px 1fr; }
+    .side h1, .nav-btn span { display: none; }
+    .nav-btn { text-align: center; }
+    .row { grid-template-columns: 42px 1fr; }
+    .tag, .actions { grid-column: span 2; }
+    .two-col { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="auth-wrap" id="authWrap">
+  <div class="auth-card">
+    <div class="brand">ILLUME CINEX</div>
+    <div class="auth-title">Admin dashboard</div>
+    <div class="tabs">
+      <button id="tabLogin" class="tab-btn active">Login</button>
+      <button id="tabRegister" class="tab-btn">Register</button>
+    </div>
+
+    <form class="auth-form active" id="loginForm">
+      <input id="loginUser" placeholder="Username" autocomplete="username" required />
+      <input id="loginPass" type="password" placeholder="Password" autocomplete="current-password" required />
+      <div class="auth-help">
+        <button type="button" class="link-btn" id="forgotPassBtn">Forgot password?</button>
+      </div>
+      <button class="btn-primary" type="submit">Sign In</button>
+      <p class="auth-msg error" id="loginMsg"></p>
+    </form>
+
+    <form class="auth-form" id="registerForm">
+      <input id="regUser" placeholder="Create username" autocomplete="username" required />
+      <input id="regPass" type="password" placeholder="Create password (min 8)" autocomplete="new-password" required />
+      <input id="regConfirm" type="password" placeholder="Confirm password" autocomplete="new-password" required />
+      <button class="btn-primary" type="submit">Create Admin Account</button>
+      <button class="btn-soft" type="button" id="resetAdminBtn">Reset Existing Admin & Register New</button>
+      <p class="auth-msg error" id="regMsg"></p>
+    </form>
+
+    <form class="auth-form" id="forgotForm">
+      <input id="forgotUser" placeholder="Enter your admin username" autocomplete="username" required />
+      <input id="forgotPass" type="password" placeholder="New password (min 8)" autocomplete="new-password" required />
+      <input id="forgotConfirm" type="password" placeholder="Confirm new password" autocomplete="new-password" required />
+      <button class="btn-primary" type="submit">Reset Password</button>
+      <button class="btn-soft" type="button" id="backToLoginBtn">Back to Login</button>
+      <p class="auth-msg error" id="forgotMsg"></p>
+    </form>
+  </div>
+</div>
+
+<div id="app">
+  <div class="layout">
+    <aside class="side">
+      <h1>ILLUME CINEX</h1>
+      <button class="nav-btn active" data-page="dashboard">📊 <span>Dashboard</span></button>
+      <button class="nav-btn" data-page="portfolio">🎞️ <span>Portfolio</span></button>
+      <button class="nav-btn" data-page="testimonials">💬 <span>Testimonials</span></button>
+      <button class="nav-btn" data-page="profile">👤 <span>Profile</span></button>
+      <button class="nav-btn" data-page="messages">📩 <span>Messages</span></button>
+      <button class="nav-btn" data-page="security">🔐 <span>Security</span></button>
+      <button class="nav-btn" id="logoutBtn">🚪 <span>Logout</span></button>
+    </aside>
+
+    <main class="main">
+      <section id="page-dashboard" class="page active">
+        <div class="topbar"><div><h2>Dashboard</h2><p>Live content summary for ILLUME CINEX</p></div></div>
+        <div class="grid cards" id="dashCards"></div>
+      </section>
+
+      <section id="page-portfolio" class="page">
+        <div class="topbar"><div><h2>Portfolio Items</h2><p>Add, edit, and remove showcase projects</p></div><button class="btn-primary" id="addPortfolioBtn">+ Add Item</button></div>
+        <div class="panel"><div class="list" id="portfolioList"></div></div>
+      </section>
+
+      <section id="page-testimonials" class="page">
+        <div class="topbar"><div><h2>Testimonials</h2><p>Manage proof and social credibility</p></div><button class="btn-primary" id="addTestimonialBtn">+ Add Testimonial</button></div>
+        <div class="panel"><div class="list" id="testimonialList"></div></div>
+      </section>
+
+      <section id="page-profile" class="page">
+        <div class="topbar"><div><h2>Profile & Contact</h2><p>Updates here reflect instantly on frontend</p></div><button class="btn-primary" id="saveProfileBtn">Save Changes</button></div>
+        <div class="panel">
+          <div class="two-col">
+            <div>
+              <div class="field"><label>Name</label><input id="pName" /></div>
+              <div class="field"><label>Title</label><input id="pTitle" /></div>
+              <div class="field"><label>Hero Tagline</label><input id="pHero" /></div>
+              <div class="field"><label>About Paragraph 1</label><textarea id="pAbout1"></textarea></div>
+              <div class="field"><label>About Paragraph 2</label><textarea id="pAbout2"></textarea></div>
+            </div>
+            <div>
+              <div class="field"><label>Email</label><input id="pEmail" /></div>
+              <div class="field"><label>Phone</label><input id="pPhone" /></div>
+              <div class="field"><label>Instagram URL</label><input id="pInstagram" /></div>
+              <div class="field"><label>Projects Done</label><input id="s1" /></div>
+              <div class="field"><label>Happy Clients</label><input id="s2" /></div>
+              <div class="field"><label>Avg. Turnaround</label><input id="s3" /></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-messages" class="page">
+        <div class="topbar">
+          <div><h2>Inbox Messages</h2><p>Contact form submissions from frontend</p></div>
+          <button class="btn-soft" id="clearMessagesBtn">Clear Inbox</button>
+        </div>
+        <div class="panel"><div class="list" id="messageList"></div></div>
+      </section>
+
+      <section id="page-security" class="page">
+        <div class="topbar"><div><h2>Security</h2><p>Single-admin credentials management</p></div></div>
+        <div class="panel" style="max-width: 520px;">
+          <div class="field"><label>Current Password</label><input id="oldPass" type="password" /></div>
+          <div class="field"><label>New Password</label><input id="newPass" type="password" /></div>
+          <div class="field"><label>Confirm New Password</label><input id="confirmPass" type="password" /></div>
+          <button class="btn-primary" id="changePassBtn">Change Password</button>
+        </div>
+        <div class="panel" style="max-width: 720px; margin-top: 1rem;">
+          <div class="field"><label>Email Webhook Endpoint</label><input id="iEmailEndpoint" placeholder="https://api.example.com/lead/email" /></div>
+          <div class="field"><label>SMS Webhook Endpoint</label><input id="iSmsEndpoint" placeholder="https://api.example.com/lead/sms" /></div>
+          <div class="field"><label>WhatsApp Webhook Endpoint</label><input id="iWhatsAppEndpoint" placeholder="https://api.example.com/lead/whatsapp" /></div>
+          <button class="btn-primary" id="saveIntegrationsBtn">Save Delivery Endpoints</button>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<div class="modal-bg" id="portfolioModalBg">
+  <div class="modal">
+    <div class="modal-head"><h3 id="portfolioModalTitle">Add Portfolio Item</h3><button class="btn-soft" data-close="portfolioModalBg">Close</button></div>
+    <div class="field"><label>Title</label><input id="mPortTitle" /></div>
+    <div class="two-col">
+      <div class="field"><label>Tag</label><input id="mPortTag" placeholder="YouTube / Reels" /></div>
+      <div class="field"><label>Icon</label><input id="mPortIcon" placeholder="🎬" /></div>
+    </div>
+    <div class="field"><label>Description</label><input id="mPortDesc" /></div>
+    <div class="field"><label>URL</label><input id="mPortUrl" placeholder="https://..." /></div>
+    <button class="btn-primary" id="savePortfolioItemBtn">Save Item</button>
+  </div>
+</div>
+
+<div class="modal-bg" id="testimonialModalBg">
+  <div class="modal">
+    <div class="modal-head"><h3 id="testimonialModalTitle">Add Testimonial</h3><button class="btn-soft" data-close="testimonialModalBg">Close</button></div>
+    <div class="field"><label>Client Name</label><input id="mTestName" /></div>
+    <div class="field"><label>Role</label><input id="mTestRole" /></div>
+    <div class="field"><label>Stars</label><select id="mTestStars"><option>5</option><option>4</option><option>3</option></select></div>
+    <div class="field"><label>Review</label><textarea id="mTestText"></textarea></div>
+    <button class="btn-primary" id="saveTestimonialItemBtn">Save Testimonial</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script>
+  const FIREBASE_CONFIG = {
+    apiKey: "",
+    authDomain: "",
+    projectId: "",
+    storageBucket: "",
+    messagingSenderId: "",
+    appId: ""
+  };
+
+  let db = null;
+  let useFirebase = false;
+  let siteDataCache = null;
+  let inboxCache = null;
+  let authCache = null;
+
+  const SITE_KEY = "illume_cinex_site_data_v1";
+  const INBOX_KEY = "illume_cinex_inbox_v1";
+  const AUTH_KEY = "illume_cinex_admin_auth_v1";
+  const SESSION_KEY = "illume_cinex_admin_session_v1";
+
+  let editingPortfolioId = null;
+  let editingTestimonialId = null;
+
+  function hasFirebaseConfig() {
+    return !!(FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.projectId && FIREBASE_CONFIG.appId);
+  }
+
+  function initFirebase() {
+    if (!hasFirebaseConfig() || !window.firebase) return false;
+    try {
+      if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+      db = firebase.firestore();
+      useFirebase = true;
+      return true;
+    } catch (error) {
+      useFirebase = false;
+      return false;
+    }
+  }
+
+  function defaultSiteData() {
+    return {
+      brand: "ILLUME CINEX",
+      profile: {
+        name: "Esakkimuthu G",
+        title: "Cinematic Video Editor",
+        hero: "I turn raw footage into stories that move people.",
+        about1: "I am Esakkimuthu G, a video editor focused on narrative rhythm, cinematic contrast, and emotionally grounded storytelling.",
+        about2: "From social reels to polished brand films, I craft edits that retain attention and elevate your visual identity.",
+        email: "esakkimuthugudi@gmail.com",
+        phone: "9497116743",
+        instagram: "https://www.instagram.com/illume._cinex?igsh=MWJ4bHJvdjM4Y2VrcQ==",
+        stat1: "42+",
+        stat2: "28+",
+        stat3: "48h"
+      },
+      portfolio: [
+        { id: 1, title: "Travel Documentary Cut", tag: "YouTube", desc: "Story-led pacing with rich color and ambient sound design.", url: "https://youtube.com", icon: "🎬" },
+        { id: 2, title: "Restaurant Launch Reel", tag: "Reels", desc: "High-retention vertical edit with dynamic transitions.", url: "https://youtube.com", icon: "🍽️" },
+        { id: 3, title: "Brand Showcase Film", tag: "Cinematic", desc: "Premium grade and narrative arc for campaign storytelling.", url: "https://youtube.com", icon: "✨" }
+      ],
+      testimonials: [
+        { id: 1, name: "Harish R", role: "Travel Creator", stars: 5, text: "The final cut looked like a mini-film. Strong pacing and world-class finish." },
+        { id: 2, name: "Divya S", role: "Brand Manager", stars: 5, text: "Quick turnaround, clean communication, and visuals that felt premium." },
+        { id: 3, name: "Naveen K", role: "YouTube Host", stars: 5, text: "Retention improved and comments praised the cinematic look immediately." }
+      ],
+      integrations: {
+        emailEndpoint: "",
+        smsEndpoint: "",
+        whatsappEndpoint: ""
+      }
+    };
+  }
+
+  function getSiteData() {
+    if (siteDataCache) return siteDataCache;
+    try {
+      const value = JSON.parse(localStorage.getItem(SITE_KEY));
+      if (!value) {
+        siteDataCache = defaultSiteData();
+        return siteDataCache;
+      }
+      const defaults = defaultSiteData();
+      siteDataCache = {
+        ...defaults,
+        ...value,
+        profile: { ...defaults.profile, ...(value.profile || {}) },
+        portfolio: Array.isArray(value.portfolio) ? value.portfolio : defaults.portfolio,
+        testimonials: Array.isArray(value.testimonials) ? value.testimonials : defaults.testimonials
+      };
+      return siteDataCache;
+    } catch (error) {
+      siteDataCache = defaultSiteData();
+      return siteDataCache;
+    }
+  }
+
+  function setSiteData(data) {
+    siteDataCache = data;
+    localStorage.setItem(SITE_KEY, JSON.stringify(data));
+    if (useFirebase && db) {
+      db.collection("admin_shared").doc("siteData").set(data).catch(function () {});
+    }
+  }
+
+  function ensureSiteData() {
+    if (!localStorage.getItem(SITE_KEY)) {
+      setSiteData(defaultSiteData());
+    }
+  }
+
+  function getAuth() {
+    if (authCache) return authCache;
+    try {
+      const value = JSON.parse(localStorage.getItem(AUTH_KEY));
+      if (!value || typeof value !== "object") return null;
+      if (!value.username || (!value.passwordHash && !value.password)) return null;
+      authCache = value;
+      return authCache;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function setAuth(data) {
+    authCache = data;
+    localStorage.setItem(AUTH_KEY, JSON.stringify(data));
+    if (useFirebase && db) {
+      db.collection("admin_shared").doc("auth").set(data).catch(function () {});
+    }
+  }
+
+  function showToast(message) {
+    const toast = document.getElementById("toast");
+    toast.textContent = message;
+    toast.classList.add("show");
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(function () { toast.classList.remove("show"); }, 2400);
+  }
+
+  function getInboxMessages() {
+    if (Array.isArray(inboxCache)) return inboxCache;
+    try {
+      const value = JSON.parse(localStorage.getItem(INBOX_KEY));
+      inboxCache = Array.isArray(value) ? value : [];
+      return inboxCache;
+    } catch (error) {
+      inboxCache = [];
+      return inboxCache;
+    }
+  }
+
+  function setInboxMessages(messages) {
+    inboxCache = Array.isArray(messages) ? messages : [];
+    localStorage.setItem(INBOX_KEY, JSON.stringify(messages));
+    if (useFirebase && db) {
+      db.collection("admin_shared").doc("inbox").set({ items: inboxCache }).catch(function () {});
+    }
+  }
+
+  async function hydrateFromFirebase() {
+    if (!useFirebase || !db) return;
+    try {
+      const [siteSnap, inboxSnap, authSnap] = await Promise.all([
+        db.collection("admin_shared").doc("siteData").get(),
+        db.collection("admin_shared").doc("inbox").get(),
+        db.collection("admin_shared").doc("auth").get()
+      ]);
+
+      if (siteSnap.exists) {
+        const site = siteSnap.data() || {};
+        const defaults = defaultSiteData();
+        siteDataCache = {
+          ...defaults,
+          ...site,
+          profile: { ...defaults.profile, ...(site.profile || {}) },
+          portfolio: Array.isArray(site.portfolio) ? site.portfolio : defaults.portfolio,
+          testimonials: Array.isArray(site.testimonials) ? site.testimonials : defaults.testimonials
+        };
+        localStorage.setItem(SITE_KEY, JSON.stringify(siteDataCache));
+      }
+
+      if (inboxSnap.exists) {
+        const inbox = inboxSnap.data() || {};
+        inboxCache = Array.isArray(inbox.items) ? inbox.items : [];
+        localStorage.setItem(INBOX_KEY, JSON.stringify(inboxCache));
+      }
+
+      if (authSnap.exists) {
+        const auth = authSnap.data() || null;
+        if (auth && auth.username) {
+          authCache = auth;
+          localStorage.setItem(AUTH_KEY, JSON.stringify(auth));
+        }
+      }
+    } catch (error) {
+      showToast("Firebase connection issue. Using local data.");
+    }
+  }
+
+  function setAuthMessage(id, text, type) {
+    const node = document.getElementById(id);
+    node.className = "auth-msg " + type;
+    node.textContent = text;
+    node.style.display = text ? "block" : "none";
+  }
+
+  function setTab(mode) {
+    const canRegister = !getAuth();
+    const loginTab = document.getElementById("tabLogin");
+    const registerTab = document.getElementById("tabRegister");
+    const targetMode = ["login", "register", "forgot"].includes(mode) ? mode : "login";
+    registerTab.disabled = false;
+    registerTab.style.opacity = "1";
+    if (!canRegister && targetMode === "register") {
+      mode = "register";
+      setAuthMessage("regMsg", "Admin account already exists. Use Login or Forgot Password to continue.", "error");
+    } else {
+      mode = targetMode;
+    }
+    loginTab.classList.toggle("active", mode === "login");
+    registerTab.classList.toggle("active", mode === "register");
+    document.getElementById("loginForm").classList.toggle("active", mode === "login");
+    document.getElementById("registerForm").classList.toggle("active", mode === "register");
+    document.getElementById("forgotForm").classList.toggle("active", mode === "forgot");
+    setAuthMessage("loginMsg", "", "error");
+    if (!(mode === "register" && !canRegister)) setAuthMessage("regMsg", "", "error");
+    setAuthMessage("forgotMsg", "", "error");
+  }
+
+  function bytesToHex(bytes) {
+    return Array.from(bytes).map(function (b) { return b.toString(16).padStart(2, "0"); }).join("");
+  }
+
+  function randomSalt() {
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    return bytesToHex(bytes);
+  }
+
+  async function hashPassword(password, salt) {
+    const data = new TextEncoder().encode(salt + "::" + password);
+    const digest = await crypto.subtle.digest("SHA-256", data);
+    return bytesToHex(new Uint8Array(digest));
+  }
+
+  async function registerAdmin(event) {
+    event.preventDefault();
+    if (getAuth()) {
+      setAuthMessage("regMsg", "An admin account already exists. Use 'Reset Existing Admin & Register New' to create a new one.", "error");
+      return;
+    }
+    const username = document.getElementById("regUser").value.trim();
+    const pass = document.getElementById("regPass").value;
+    const confirm = document.getElementById("regConfirm").value;
+    if (!username || !pass) return setAuthMessage("regMsg", "Username and password are required.", "error");
+    if (username.length < 3) return setAuthMessage("regMsg", "Username must be at least 3 characters.", "error");
+    if (pass.length < 8) return setAuthMessage("regMsg", "Password must be at least 8 characters.", "error");
+    if (pass !== confirm) return setAuthMessage("regMsg", "Passwords do not match.", "error");
+    const salt = randomSalt();
+    const hash = await hashPassword(pass, salt);
+    setAuth({ username: username, passwordHash: hash, salt: salt, createdAt: Date.now() });
+    setAuthMessage("regMsg", "Admin created. You can log in now.", "ok");
+    document.getElementById("registerForm").reset();
+    setTimeout(function () { setTab("login"); }, 800);
+  }
+
+  async function loginAdmin(event) {
+    event.preventDefault();
+    const auth = getAuth();
+    if (!auth) {
+      setAuthMessage("loginMsg", "No admin account found. Register first.", "error");
+      setTab("register");
+      return;
+    }
+    const username = document.getElementById("loginUser").value.trim();
+    const pass = document.getElementById("loginPass").value;
+    if (!username || !pass) return setAuthMessage("loginMsg", "Please enter username and password.", "error");
+    if (username !== auth.username) {
+      setAuthMessage("loginMsg", "Invalid username or password.", "error");
+      return;
+    }
+    let isValid = false;
+    if (auth.passwordHash && auth.salt) {
+      const hash = await hashPassword(pass, auth.salt);
+      isValid = hash === auth.passwordHash;
+    } else if (auth.password) {
+      // Backward compatibility for older plain-text auth format.
+      isValid = pass === auth.password;
+      if (isValid) {
+        const salt = randomSalt();
+        const hash = await hashPassword(pass, salt);
+        setAuth({ username: auth.username, passwordHash: hash, salt: salt, createdAt: auth.createdAt || Date.now() });
+      }
+    }
+    if (!isValid) return setAuthMessage("loginMsg", "Invalid username or password.", "error");
+    sessionStorage.setItem(SESSION_KEY, "1");
+    document.getElementById("authWrap").style.display = "none";
+    document.getElementById("app").style.display = "block";
+    initApp();
+  }
+
+  async function forgotPassword(event) {
+    event.preventDefault();
+    const auth = getAuth();
+    if (!auth) {
+      setAuthMessage("forgotMsg", "No admin account found. Please register first.", "error");
+      setTab("register");
+      return;
+    }
+    const username = document.getElementById("forgotUser").value.trim();
+    const newPass = document.getElementById("forgotPass").value;
+    const confirmPass = document.getElementById("forgotConfirm").value;
+    if (!username || !newPass || !confirmPass) return setAuthMessage("forgotMsg", "Please fill all fields.", "error");
+    if (username !== auth.username) return setAuthMessage("forgotMsg", "Username does not match admin account.", "error");
+    if (newPass.length < 8) return setAuthMessage("forgotMsg", "New password must be at least 8 characters.", "error");
+    if (newPass !== confirmPass) return setAuthMessage("forgotMsg", "Passwords do not match.", "error");
+    const salt = randomSalt();
+    const hash = await hashPassword(newPass, salt);
+    setAuth({ username: auth.username, passwordHash: hash, salt: salt, createdAt: auth.createdAt || Date.now() });
+    document.getElementById("forgotForm").reset();
+    setAuthMessage("forgotMsg", "Password reset successful. Please login with your new password.", "ok");
+    setTimeout(function () { setTab("login"); }, 900);
+  }
+
+  function logoutAdmin() {
+    sessionStorage.removeItem(SESSION_KEY);
+    document.getElementById("app").style.display = "none";
+    document.getElementById("authWrap").style.display = "grid";
+    document.getElementById("loginForm").reset();
+    setTab("login");
+  }
+
+  function resetAdminAccount() {
+    const auth = getAuth();
+    if (!auth) {
+      setAuthMessage("regMsg", "No existing admin found. You can register now.", "ok");
+      return;
+    }
+    const confirmed = confirm("This will remove current admin login and let you register a new one. Continue?");
+    if (!confirmed) return;
+    authCache = null;
+    localStorage.removeItem(AUTH_KEY);
+    if (useFirebase && db) {
+      db.collection("admin_shared").doc("auth").delete().catch(function () {});
+    }
+    sessionStorage.removeItem(SESSION_KEY);
+    document.getElementById("loginForm").reset();
+    document.getElementById("registerForm").reset();
+    setTab("register");
+    setAuthMessage("regMsg", "Previous admin removed. Register a new admin account now.", "ok");
+  }
+
+  function switchPage(page) {
+    document.querySelectorAll(".page").forEach(function (node) { node.classList.remove("active"); });
+    document.querySelectorAll(".nav-btn[data-page]").forEach(function (btn) {
+      btn.classList.toggle("active", btn.dataset.page === page);
+    });
+    document.getElementById("page-" + page).classList.add("active");
+  }
+
+  function escapeHtml(text) {
+    return String(text || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function renderDashboard() {
+    const data = getSiteData();
+    const inboxCount = getInboxMessages().length;
+    const avg = data.testimonials.length ? (data.testimonials.reduce(function (a, t) { return a + Number(t.stars || 0); }, 0) / data.testimonials.length).toFixed(1) : "0";
+    document.getElementById("dashCards").innerHTML =
+      "<div class='card'><strong>" + data.portfolio.length + "</strong><span>Portfolio items</span></div>" +
+      "<div class='card'><strong>" + data.testimonials.length + "</strong><span>Testimonials</span></div>" +
+      "<div class='card'><strong>" + inboxCount + "</strong><span>New messages</span></div>" +
+      "<div class='card'><strong>" + avg + "</strong><span>Avg rating</span></div>" +
+      "<div class='card'><strong>" + escapeHtml(data.profile.name) + "</strong><span>Active profile</span></div>";
+  }
+
+  function renderPortfolio() {
+    const data = getSiteData();
+    const list = document.getElementById("portfolioList");
+    if (!data.portfolio.length) {
+      list.innerHTML = "<p class='sub'>No portfolio items yet.</p>";
+      return;
+    }
+    list.innerHTML = data.portfolio.map(function (item) {
+      return "<div class='row'>" +
+        "<div class='thumb'>" + escapeHtml(item.icon || "🎬") + "</div>" +
+        "<div><div>" + escapeHtml(item.title || "Untitled") + "</div><div class='sub'>" + escapeHtml(item.desc || "") + "</div></div>" +
+        "<div class='tag'>" + escapeHtml(item.tag || "Work") + "</div>" +
+        "<div class='actions'><button class='btn-soft' onclick='openPortfolioModal(" + item.id + ")'>Edit</button><button class='danger' onclick='deletePortfolioItem(" + item.id + ")'>Delete</button></div>" +
+      "</div>";
+    }).join("");
+  }
+
+  function renderTestimonials() {
+    const data = getSiteData();
+    const list = document.getElementById("testimonialList");
+    if (!data.testimonials.length) {
+      list.innerHTML = "<p class='sub'>No testimonials yet.</p>";
+      return;
+    }
+    list.innerHTML = data.testimonials.map(function (item) {
+      return "<div class='row'>" +
+        "<div class='thumb'>💬</div>" +
+        "<div><div>" + escapeHtml(item.name || "Client") + "</div><div class='sub'>" + escapeHtml(item.role || "") + " · " + "★".repeat(Number(item.stars || 5)) + "</div></div>" +
+        "<div class='tag'>Review</div>" +
+        "<div class='actions'><button class='btn-soft' onclick='openTestimonialModal(" + item.id + ")'>Edit</button><button class='danger' onclick='deleteTestimonialItem(" + item.id + ")'>Delete</button></div>" +
+      "</div>";
+    }).join("");
+  }
+
+  function renderProfile() {
+    const p = getSiteData().profile;
+    document.getElementById("pName").value = p.name || "";
+    document.getElementById("pTitle").value = p.title || "";
+    document.getElementById("pHero").value = p.hero || "";
+    document.getElementById("pAbout1").value = p.about1 || "";
+    document.getElementById("pAbout2").value = p.about2 || "";
+    document.getElementById("pEmail").value = p.email || "";
+    document.getElementById("pPhone").value = p.phone || "";
+    document.getElementById("pInstagram").value = p.instagram || "";
+    document.getElementById("s1").value = p.stat1 || "";
+    document.getElementById("s2").value = p.stat2 || "";
+    document.getElementById("s3").value = p.stat3 || "";
+  }
+
+  function renderIntegrations() {
+    const i = (getSiteData().integrations || {});
+    document.getElementById("iEmailEndpoint").value = i.emailEndpoint || "";
+    document.getElementById("iSmsEndpoint").value = i.smsEndpoint || "";
+    document.getElementById("iWhatsAppEndpoint").value = i.whatsappEndpoint || "";
+  }
+
+  function renderMessages() {
+    const messages = getInboxMessages();
+    const list = document.getElementById("messageList");
+    if (!messages.length) {
+      list.innerHTML = "<p class='sub'>No messages yet. New contact form submissions will appear here.</p>";
+      return;
+    }
+    list.innerHTML = messages.map(function (m) {
+      const dt = new Date(m.createdAt);
+      const stamp = isNaN(dt.getTime()) ? "" : dt.toLocaleString();
+      return "<div class='row'>" +
+        "<div class='thumb'>📨</div>" +
+        "<div><div>" + escapeHtml(m.name || "Unknown") + " · " + escapeHtml(m.email || "") + "</div>" +
+        "<div class='sub'>" + escapeHtml(m.service || "General") + " · " + escapeHtml(stamp) + "</div>" +
+        "<div class='sub' style='margin-top:.3rem;'>" + escapeHtml(m.message || "") + "</div></div>" +
+        "<div class='tag'>Lead</div>" +
+        "<div class='actions'>" +
+          "<button class='btn-soft' onclick='replyEmail(" + Number(m.id) + ")'>Email</button>" +
+          "<button class='btn-soft' onclick='replyWhatsApp(" + Number(m.id) + ")'>WhatsApp</button>" +
+          "<button class='btn-soft' onclick='openInstagram()'>Instagram</button>" +
+          "<button class='danger' onclick='deleteMessage(" + Number(m.id) + ")'>Delete</button>" +
+        "</div>" +
+      "</div>";
+    }).join("");
+  }
+
+  function replyEmail(id) {
+    const msg = getInboxMessages().find(function (m) { return Number(m.id) === Number(id); });
+    if (!msg || !msg.email) return showToast("No email found for this lead.");
+    const subject = encodeURIComponent("ILLUME CINEX - Re: " + (msg.service || "Project Inquiry"));
+    const body = encodeURIComponent("Hi " + (msg.name || "") + ",\n\nThanks for reaching out to ILLUME CINEX.\n\n");
+    window.open("mailto:" + msg.email + "?subject=" + subject + "&body=" + body, "_blank");
+  }
+
+  function replyWhatsApp(id) {
+    const data = getSiteData();
+    const adminPhone = (data.profile.phone || "").replace(/[^\d]/g, "");
+    const msg = getInboxMessages().find(function (m) { return Number(m.id) === Number(id); });
+    if (!adminPhone || !msg) return showToast("Missing phone or message.");
+    const lines = [
+      "Lead Follow-up",
+      "Lead: " + (msg.name || ""),
+      "Email: " + (msg.email || ""),
+      "Phone: " + (msg.phone || ""),
+      "Service: " + (msg.service || ""),
+      "Message: " + (msg.message || "")
+    ];
+    window.open("https://wa.me/" + adminPhone + "?text=" + encodeURIComponent(lines.join("\n")), "_blank");
+  }
+
+  function openInstagram() {
+    const insta = getSiteData().profile.instagram || "https://www.instagram.com/illume._cinex?igsh=MWJ4bHJvdjM4Y2VrcQ==";
+    window.open(insta, "_blank");
+  }
+
+  function deleteMessage(id) {
+    const messages = getInboxMessages().filter(function (m) { return Number(m.id) !== Number(id); });
+    setInboxMessages(messages);
+    renderMessages();
+    renderDashboard();
+    showToast("Message deleted.");
+  }
+
+  function clearMessages() {
+    if (!confirm("Clear all inbox messages?")) return;
+    setInboxMessages([]);
+    renderMessages();
+    renderDashboard();
+    showToast("Inbox cleared.");
+  }
+
+  function renderAll() {
+    renderDashboard();
+    renderPortfolio();
+    renderTestimonials();
+    renderProfile();
+    renderIntegrations();
+    renderMessages();
+  }
+
+  function saveProfileChanges() {
+    const data = getSiteData();
+    data.brand = "ILLUME CINEX";
+    data.profile.name = document.getElementById("pName").value.trim();
+    data.profile.title = document.getElementById("pTitle").value.trim();
+    data.profile.hero = document.getElementById("pHero").value.trim();
+    data.profile.about1 = document.getElementById("pAbout1").value.trim();
+    data.profile.about2 = document.getElementById("pAbout2").value.trim();
+    data.profile.email = document.getElementById("pEmail").value.trim();
+    data.profile.phone = document.getElementById("pPhone").value.trim();
+    data.profile.instagram = document.getElementById("pInstagram").value.trim();
+    data.profile.stat1 = document.getElementById("s1").value.trim();
+    data.profile.stat2 = document.getElementById("s2").value.trim();
+    data.profile.stat3 = document.getElementById("s3").value.trim();
+    setSiteData(data);
+    renderAll();
+    showToast("Profile updated and synced.");
+  }
+
+  function saveIntegrations() {
+    const data = getSiteData();
+    const emailEndpoint = document.getElementById("iEmailEndpoint").value.trim();
+    const smsEndpoint = document.getElementById("iSmsEndpoint").value.trim();
+    const whatsappEndpoint = document.getElementById("iWhatsAppEndpoint").value.trim();
+    const urls = [emailEndpoint, smsEndpoint, whatsappEndpoint].filter(Boolean);
+    const invalid = urls.some(function (url) { return !/^https?:\/\//i.test(url); });
+    if (invalid) {
+      showToast("Endpoints must start with http:// or https://");
+      return;
+    }
+    data.integrations = { emailEndpoint: emailEndpoint, smsEndpoint: smsEndpoint, whatsappEndpoint: whatsappEndpoint };
+    setSiteData(data);
+    showToast("Delivery endpoints saved.");
+  }
+
+  function openPortfolioModal(id) {
+    editingPortfolioId = id || null;
+    const data = getSiteData();
+    const item = data.portfolio.find(function (x) { return x.id === id; });
+    document.getElementById("portfolioModalTitle").textContent = id ? "Edit Portfolio Item" : "Add Portfolio Item";
+    document.getElementById("mPortTitle").value = item ? item.title : "";
+    document.getElementById("mPortTag").value = item ? item.tag : "";
+    document.getElementById("mPortIcon").value = item ? item.icon : "🎬";
+    document.getElementById("mPortDesc").value = item ? item.desc : "";
+    document.getElementById("mPortUrl").value = item ? item.url : "";
+    document.getElementById("portfolioModalBg").classList.add("open");
+  }
+
+  function savePortfolioItem() {
+    const title = document.getElementById("mPortTitle").value.trim();
+    if (!title) return showToast("Portfolio title is required.");
+    const data = getSiteData();
+    const payload = {
+      id: editingPortfolioId || Date.now(),
+      title: title,
+      tag: document.getElementById("mPortTag").value.trim() || "Work",
+      icon: document.getElementById("mPortIcon").value.trim() || "🎬",
+      desc: document.getElementById("mPortDesc").value.trim(),
+      url: document.getElementById("mPortUrl").value.trim() || "#"
+    };
+    if (editingPortfolioId) {
+      const idx = data.portfolio.findIndex(function (x) { return x.id === editingPortfolioId; });
+      if (idx >= 0) data.portfolio[idx] = payload;
+    } else {
+      data.portfolio.unshift(payload);
+    }
+    setSiteData(data);
+    closeModal("portfolioModalBg");
+    renderAll();
+    showToast("Portfolio updated.");
+  }
+
+  function deletePortfolioItem(id) {
+    if (!confirm("Delete this portfolio item?")) return;
+    const data = getSiteData();
+    data.portfolio = data.portfolio.filter(function (x) { return x.id !== id; });
+    setSiteData(data);
+    renderAll();
+    showToast("Portfolio item removed.");
+  }
+
+  function openTestimonialModal(id) {
+    editingTestimonialId = id || null;
+    const data = getSiteData();
+    const item = data.testimonials.find(function (x) { return x.id === id; });
+    document.getElementById("testimonialModalTitle").textContent = id ? "Edit Testimonial" : "Add Testimonial";
+    document.getElementById("mTestName").value = item ? item.name : "";
+    document.getElementById("mTestRole").value = item ? item.role : "";
+    document.getElementById("mTestStars").value = item ? String(item.stars) : "5";
+    document.getElementById("mTestText").value = item ? item.text : "";
+    document.getElementById("testimonialModalBg").classList.add("open");
+  }
+
+  function saveTestimonialItem() {
+    const name = document.getElementById("mTestName").value.trim();
+    const text = document.getElementById("mTestText").value.trim();
+    if (!name || !text) return showToast("Name and review are required.");
+    const data = getSiteData();
+    const payload = {
+      id: editingTestimonialId || Date.now(),
+      name: name,
+      role: document.getElementById("mTestRole").value.trim(),
+      stars: Number(document.getElementById("mTestStars").value || 5),
+      text: text
+    };
+    if (editingTestimonialId) {
+      const idx = data.testimonials.findIndex(function (x) { return x.id === editingTestimonialId; });
+      if (idx >= 0) data.testimonials[idx] = payload;
+    } else {
+      data.testimonials.unshift(payload);
+    }
+    setSiteData(data);
+    closeModal("testimonialModalBg");
+    renderAll();
+    showToast("Testimonial updated.");
+  }
+
+  function deleteTestimonialItem(id) {
+    if (!confirm("Delete this testimonial?")) return;
+    const data = getSiteData();
+    data.testimonials = data.testimonials.filter(function (x) { return x.id !== id; });
+    setSiteData(data);
+    renderAll();
+    showToast("Testimonial removed.");
+  }
+
+  async function changePassword() {
+    const auth = getAuth();
+    if (!auth) return showToast("No admin account found.");
+    const oldPass = document.getElementById("oldPass").value;
+    const newPass = document.getElementById("newPass").value;
+    const confirmPass = document.getElementById("confirmPass").value;
+    if (!oldPass || !newPass || !confirmPass) return showToast("Fill all password fields.");
+    if (newPass.length < 8) return showToast("New password must be at least 8 characters.");
+    if (newPass !== confirmPass) return showToast("New passwords do not match.");
+    const oldHash = await hashPassword(oldPass, auth.salt);
+    if (oldHash !== auth.passwordHash) return showToast("Current password is incorrect.");
+    const salt = randomSalt();
+    const hash = await hashPassword(newPass, salt);
+    setAuth({ ...auth, passwordHash: hash, salt: salt });
+    document.getElementById("oldPass").value = "";
+    document.getElementById("newPass").value = "";
+    document.getElementById("confirmPass").value = "";
+    showToast("Password changed successfully.");
+  }
+
+  function closeModal(id) {
+    document.getElementById(id).classList.remove("open");
+  }
+
+  function initApp() {
+    ensureSiteData();
+    renderAll();
+  }
+
+  document.getElementById("tabLogin").addEventListener("click", function () { setTab("login"); });
+  document.getElementById("tabRegister").addEventListener("click", function () { setTab("register"); });
+  document.getElementById("forgotPassBtn").addEventListener("click", function () { setTab("forgot"); });
+  document.getElementById("backToLoginBtn").addEventListener("click", function () { setTab("login"); });
+  document.getElementById("resetAdminBtn").addEventListener("click", resetAdminAccount);
+  document.getElementById("loginForm").addEventListener("submit", loginAdmin);
+  document.getElementById("registerForm").addEventListener("submit", registerAdmin);
+  document.getElementById("forgotForm").addEventListener("submit", forgotPassword);
+  document.getElementById("logoutBtn").addEventListener("click", logoutAdmin);
+
+  document.querySelectorAll(".nav-btn[data-page]").forEach(function (btn) {
+    btn.addEventListener("click", function () { switchPage(btn.dataset.page); });
+  });
+
+  document.getElementById("saveProfileBtn").addEventListener("click", saveProfileChanges);
+  document.getElementById("addPortfolioBtn").addEventListener("click", function () { openPortfolioModal(); });
+  document.getElementById("addTestimonialBtn").addEventListener("click", function () { openTestimonialModal(); });
+  document.getElementById("savePortfolioItemBtn").addEventListener("click", savePortfolioItem);
+  document.getElementById("saveTestimonialItemBtn").addEventListener("click", saveTestimonialItem);
+  document.getElementById("changePassBtn").addEventListener("click", changePassword);
+  document.getElementById("saveIntegrationsBtn").addEventListener("click", saveIntegrations);
+  document.getElementById("clearMessagesBtn").addEventListener("click", clearMessages);
+
+  document.querySelectorAll("[data-close]").forEach(function (btn) {
+    btn.addEventListener("click", function () { closeModal(btn.dataset.close); });
+  });
+
+  window.addEventListener("click", function (event) {
+    ["portfolioModalBg", "testimonialModalBg"].forEach(function (id) {
+      const modal = document.getElementById(id);
+      if (event.target === modal) modal.classList.remove("open");
+    });
+  });
+
+  window.addEventListener("storage", function (event) {
+    if (event.key === SITE_KEY || event.key === INBOX_KEY) {
+      renderAll();
+    }
+  });
+
+  async function boot() {
+    ensureSiteData();
+    initFirebase();
+    if (useFirebase) {
+      await hydrateFromFirebase();
+      showToast("Using shared Firebase data.");
+    } else {
+      showToast("Using local browser data. Add Firebase config to share with everyone.");
+    }
+
+    if (sessionStorage.getItem(SESSION_KEY) === "1") {
+      document.getElementById("authWrap").style.display = "none";
+      document.getElementById("app").style.display = "block";
+      initApp();
+    } else {
+      setTab("login");
+    }
+  }
+
+  boot();
+</script>
+</body>
+</html>
